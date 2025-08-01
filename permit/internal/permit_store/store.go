@@ -2,6 +2,7 @@ package permit_store
 
 import (
 	"github.com/mengri/utils-store/store"
+	"github.com/mengri/utils/autowire-v2"
 )
 
 type IPermitStore interface {
