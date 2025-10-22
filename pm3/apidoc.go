@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mengri/utils/auto"
 	"log"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
@@ -13,15 +14,6 @@ import (
 
 type readHandler func(ginCtx *gin.Context) (interface{}, error)
 
-type Response struct {
-	Data     map[string]any `json:"data,omitempty"`
-	Code     int            `json:"code"`
-	Success  any            `json:"success,omitempty"`
-	Message  string         `json:"msg,omitempty"`
-	Total    int64          `json:"tatal,omitempty"`
-	PageSize int            `json:"pageSize,omitempty"`
-	Page     int            `json:"page,omitempty"`
-}
 type IApiError interface {
 	error
 	Code() int
@@ -42,12 +34,8 @@ type apiDoc struct {
 func CreateApiWidthDoc(method string, path string, IN []string, OUT []string, handlerFunc any) Api {
 	return Gen(&apiDoc{Method: method, Path: path, IN: IN, OUT: OUT, HandlerFunc: handlerFunc})
 }
-func CreateApiSimple(method string, path string, handler gin.HandlerFunc) Api {
-	return &formApi{
-		method:  method,
-		path:    path,
-		handler: handler,
-	}
+func CreateApiWidthDocSimple(method string, path string, handlerFunc any) {
+
 }
 func CreateApiWidthError(method string, path string, handlerFunc any) Api {
 	return Gen(&apiDoc{Method: method, Path: path, IN: nil, OUT: nil, HandlerFunc: handlerFunc})
@@ -78,12 +66,8 @@ func (a *apiDoc) Handler() gin.HandlerFunc {
 		for _, rh := range readHandlers {
 			v, err := rh(context)
 			if err != nil {
-				context.JSON(200, &Response{
-					Data:    nil,
-					Code:    -1,
-					Success: "fail",
-					Message: fmt.Sprintf("invald request:%s", err.Error()),
-				})
+				ResponseErr(context, http.StatusBadRequest, fmt.Sprintf("invald request:%s", err.Error()))
+
 				return
 			}
 			in = append(in, reflect.ValueOf(v))
@@ -97,40 +81,33 @@ func (a *apiDoc) Handler() gin.HandlerFunc {
 			err := errV.Interface().(error)
 			var ae IApiError
 			if errors.As(err, &ae) {
-				context.JSON(200, &Response{
-					Data:    nil,
-					Code:    ae.Code(),
-					Success: ae.Success(),
-					Message: ae.Message(),
-				})
-			} else {
-				context.JSON(200, &Response{
 
-					Code:    -1,
-					Success: "fail",
-					Message: err.Error(),
-				})
+				ResponseErr(context, ae.Code(), ae.Message())
+			} else {
+				ResponseErr(context, http.StatusInternalServerError, err.Error())
+
 			}
 			return
 		}
-		resp := &Response{
-			Data:    make(map[string]any),
-			Code:    0,
-			Success: "success",
-			Message: "",
+		if len(a.OUT) == 0 {
+			ResponseOk(context)
+
+			return
 		}
+		resultData := make(map[string]any)
+
 		for i, field := range a.OUT {
 
 			rv := rs[i]
 			if field != "" {
 				value := rv.Interface()
 				auto.CompleteLabels(context, value)
-				resp.Data[field] = value
+				resultData[field] = value
 			}
 
 		}
-		context.JSON(200, resp)
 
+		Response(context, resultData)
 	}
 }
 
