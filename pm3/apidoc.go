@@ -22,8 +22,6 @@ type IApiError interface {
 }
 
 type apiDoc struct {
-	Method      string
-	Path        string
 	IN          []string
 	OUT         []string
 	HandlerFunc any
@@ -32,11 +30,18 @@ type apiDoc struct {
 }
 
 func CreateApiWidthDoc(method string, path string, IN []string, OUT []string, handlerFunc any) Api {
-	return Gen(&apiDoc{Method: method, Path: path, IN: IN, OUT: OUT, HandlerFunc: handlerFunc})
-}
+	a := apiDoc{IN: IN, OUT: OUT, restfulSet: parseRestfulParams(path), HandlerFunc: handlerFunc}
+	h, err := a.Handler()
+	if err != nil {
+		log.Fatalf("create api [%s %s] error:%s", method, path, err.Error())
+		return nil
+	}
+	return &formApi{
+		method:  method,
+		path:    path,
+		handler: h,
+	}
 
-func CreateApiWidthError(method string, path string, handlerFunc any) Api {
-	return Gen(&apiDoc{Method: method, Path: path, IN: nil, OUT: nil, HandlerFunc: handlerFunc})
 }
 
 // HandlerFunc 为实现方法, 方法签名需要和 IN 对应
@@ -51,11 +56,11 @@ func CreateApiWidthError(method string, path string, handlerFunc any) Api {
 // 如想 IN=["context",":id,"body"] ,OUT = ["list"], 适用签名  func(ctx *gin.Context,id int,body *BodyStruct) (list []*Result,err error)
 
 // Handler 构造api handler
-func (a *apiDoc) Handler() gin.HandlerFunc {
+func (a *apiDoc) Handler() (gin.HandlerFunc, error) {
 
 	readHandlers, err := a.check()
 	if err != nil {
-		log.Fatal(fmt.Errorf("check api [%s %s] error:%w", a.Method, a.Path, err))
+		return nil, err
 	}
 
 	fv := reflect.ValueOf(a.HandlerFunc)
@@ -106,7 +111,7 @@ func (a *apiDoc) Handler() gin.HandlerFunc {
 		}
 
 		Response(context, resultData)
-	}
+	}, nil
 }
 
 func (a *apiDoc) check() ([]readHandler, error) {
@@ -279,9 +284,7 @@ func getStringPareHandler(vt reflect.Type) (func(v string) (interface{}, error),
 }
 
 func (a *apiDoc) checkRestFul(name string) bool {
-	if a.restfulSet == nil {
-		a.restfulSet = parseRestfulParams(a.Path)
-	}
+
 	_, ok := a.restfulSet[name]
 	return ok
 

@@ -20,9 +20,5 @@ func (f *formApi) Handler(context *gin.Context) {
 	f.handler(context)
 }
 func Gen(a *apiDoc) Api {
-	return &formApi{
-		method:  a.Method,
-		path:    a.Path,
-		handler: a.Handler(),
-	}
+	return
 }
