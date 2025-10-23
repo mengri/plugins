@@ -19,6 +19,3 @@ func (f *formApi) Path() string {
 func (f *formApi) Handler(context *gin.Context) {
 	f.handler(context)
 }
-func Gen(a *apiDoc) Api {
-	return
-}
