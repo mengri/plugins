@@ -34,9 +34,7 @@ type apiDoc struct {
 func CreateApiWidthDoc(method string, path string, IN []string, OUT []string, handlerFunc any) Api {
 	return Gen(&apiDoc{Method: method, Path: path, IN: IN, OUT: OUT, HandlerFunc: handlerFunc})
 }
-func CreateApiWidthDocSimple(method string, path string, handlerFunc any) {
 
-}
 func CreateApiWidthError(method string, path string, handlerFunc any) Api {
 	return Gen(&apiDoc{Method: method, Path: path, IN: nil, OUT: nil, HandlerFunc: handlerFunc})
 }
