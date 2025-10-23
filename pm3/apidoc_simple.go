@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func CreateApiSimple[OUTPUT any](method string, path string, handler func(ctx *gin.Context) (*OUTPUT, error)) Api {
+func CreateApiSimple[OUTPUT any](method string, path string, handler func(ctx *gin.Context) (OUTPUT, error)) Api {
 	if handler == nil {
 		log.Fatalf("handler is nil for %s %s", method, path)
 		return nil
@@ -21,7 +21,7 @@ func CreateApiSimple[OUTPUT any](method string, path string, handler func(ctx *g
 	}
 }
 
-func GenSimpleHandler[OUTPUT any](handler func(ctx *gin.Context) (*OUTPUT, error)) gin.HandlerFunc {
+func GenSimpleHandler[OUTPUT any](handler func(ctx *gin.Context) (OUTPUT, error)) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		output, err := handler(ctx)
 		if err != nil {

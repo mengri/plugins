@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-func CreateApiStandard[INPUT any, OUTPUT any](method string, path string, handler func(*gin.Context, *INPUT) (*OUTPUT, error)) Api {
+func CreateApiStandard[INPUT any, OUTPUT any](method string, path string, handler func(*gin.Context, *INPUT) (OUTPUT, error)) Api {
 	if handler == nil {
 
 		log.Fatalf("handler is nil for %s %s", method, path)
@@ -24,7 +24,7 @@ func CreateApiStandard[INPUT any, OUTPUT any](method string, path string, handle
 	}
 }
 
-func GenStandardHandler[INPUT any, OUTPUT any](handler func(*gin.Context, *INPUT) (*OUTPUT, error)) gin.HandlerFunc {
+func GenStandardHandler[INPUT any, OUTPUT any](handler func(*gin.Context, *INPUT) (OUTPUT, error)) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
 		var input = new(INPUT)

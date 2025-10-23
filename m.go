@@ -1,6 +1,7 @@
 package plugins
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/mengri/plugins/ignore"
 	"github.com/mengri/plugins/pm3"
 	"net/http"
@@ -31,8 +32,8 @@ func (f frontendPlugins) Name() string {
 func (f frontendPlugins) APis() []pm3.Api {
 	ignore.IgnorePath("*", http.MethodGet, "/api/v1/system/config")
 	return []pm3.Api{
-		pm3.CreateApiWidthDoc(http.MethodGet, "/api/v1/system/config", nil, []string{"plugins"}, func() (frontendPlugins, error) {
-			return f, nil
+		pm3.CreateApiSimple(http.MethodGet, "/api/v1/system/config", func(ctx *gin.Context) (any, error) {
+			return map[string]any{"plugins": f}, nil
 		}),
 	}
 }
