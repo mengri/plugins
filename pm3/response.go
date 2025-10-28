@@ -1,6 +1,7 @@
 package pm3
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -71,4 +72,23 @@ func ResponsePage[T any](ctx *gin.Context, data []*T, total int64, pageSize int,
 	}
 
 	ctx.JSON(http.StatusOK, resp)
+}
+
+type SingleResponseData[T any] struct {
+	D    T
+	name string
+}
+
+func (s *SingleResponseData[T]) MarshalJSON() ([]byte, error) {
+	d := map[string]T{
+		s.name: s.D,
+	}
+	return json.Marshal(d)
+}
+
+func SingleData[T any](name string, data T) *SingleResponseData[T] {
+	return &SingleResponseData[T]{
+		D:    data,
+		name: name,
+	}
 }
